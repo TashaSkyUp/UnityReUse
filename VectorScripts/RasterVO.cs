@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ public class RasterVO
  
     protected Texture2D myTex2d;
     private bool initialized=false;
+    private float[,] a;
 
     public void tmp(float[] v)
     {
@@ -21,15 +23,18 @@ public class RasterVO
     {
 
     }
-    protected void UpdateTex2D()
+    protected void UpdateTex2D(Color BC)
     {
-        if (myTex2d==null) { myTex2d = new Texture2D((int)sRect.width, (int)sRect.height); }
+        if (myTex2d == null) { myTex2d = new Texture2D((int)sRect.width, (int)sRect.height); }
         var use = this;
         int idx = 0;
-        UnityEngine.Color c = new UnityEngine.Color
-        {
-            a = 1
-        };
+        Color UC= new Color();
+        if (BC == null) { 
+            UnityEngine.Color c = new UnityEngine.Color
+            {
+                a = 1
+            };
+        }
 
        
         int mx = (int)use.sRect.width;
@@ -38,8 +43,10 @@ public class RasterVO
             for (int y = 0; y < use.sRect.height; y++)
             {
                 float n = use.VO[use.VO.LongLength - 1 - idx];
-                c.r = n; c.g = n; c.b = n;
-                myTex2d.SetPixel((mx - 1) - x, y, c);
+                UC.r = BC.r * n;
+                UC.g = BC.g * n;
+                UC.b = BC.b * n;
+                myTex2d.SetPixel((mx - 1) - x, y, UC);
                 idx++;
                 if (idx >= use.VO.Length - 1) { break; }
             }
@@ -50,10 +57,41 @@ public class RasterVO
         myTex2d.Apply();
         initialized = true;
     }
+
+    internal float[,] get2dVO()
+    {
+        int width = (int)sRect.width;
+        float[,] o = new float[width, (int)sRect.height];
+        for (int idx = 0; idx < VO.Length; idx++)
+        {
+            int y = idx / width;
+            int x = (idx - (y * width));
+            o[x, y] = VO[idx];
+            //Debug.Log(x + " : " + y);
+
+        }
+        return o;
+    }
+
     public RasterVO(UnityEngine.Rect nsRect, float[] nVO)
     {
         sRect = nsRect;
         VO = nVO;
+        myTex2d = new Texture2D((int)sRect.width, (int)sRect.height);
+    }
+    public RasterVO(UnityEngine.Rect nsRect, float[,] nVO)
+    {
+        VO = new float[nVO.GetLength(0) * nVO.GetLength(1)];
+        sRect = nsRect;
+        int idx = 0;
+        for (int y = 0; y < nVO.GetLength(1); y++)
+        {
+            for (int x = 0; x < nVO.GetLength(0); x++)
+            {
+                VO[idx] = nVO[x, y];
+                idx++;
+            }
+        }
         myTex2d = new Texture2D((int)sRect.width, (int)sRect.height);
     }
 
@@ -68,13 +106,16 @@ public class RasterVO
     }
     public Texture2D toTex2D()
     {
-        if (initialized == true) { return(myTex2d); } else { UpdateTex2D(); }
+        if (initialized == true) { return(myTex2d); } else { UpdateTex2D(new Color(1f, 1f, 1f)); }return (myTex2d);
 
-       
-
+    }
+    public Texture2D toTex2D(Color c)
+    {
+        if (initialized == true) { return (myTex2d); } else { UpdateTex2D(c); }
         return (myTex2d);
 
     }
+
 
     public Sprite toSprite()
     {
@@ -85,5 +126,21 @@ public class RasterVO
         System.GC.Collect();
         return (spr);
 
+    }
+
+    public void PullValues(float v,float fallOff) {
+        for (int i = 0; i < VO.LongLength; i++)
+        {
+            float n = VO[i];
+            float dp = Math.Abs(v - n)/fallOff;
+            if (dp > 1) { dp = 1; }
+            float t2 = Mathf.Pow(dp, 2/3f);
+            float t1 = (Mathf.Sin(t2 * 3.14f));
+
+            VO[i] = (n*(1-t1)) + (v*(t1));
+
+
+        }
+        
     }
 }
