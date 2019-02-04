@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System;
+using System.Drawing;
+
 public class RasVOSet 
 {
     public class MyEqualityComparer : IEqualityComparer<float[]>
@@ -37,6 +40,7 @@ public class RasVOSet
     }
     public  List<RasterVO> eVOS = new List<RasterVO>();
     public Dictionary<float[], string> trans = new Dictionary<float[], string>(new MyEqualityComparer());
+    private Bitmap lBmp;
 
     public void SaveToFile(string fn)
     {
@@ -48,6 +52,11 @@ public class RasVOSet
         File.AppendAllLines(fn, o);
     }
     public RasVOSet(){}
+
+    public RasVOSet(Bitmap fn)
+    {
+        lBmp = fn;
+    }
     public RasVOSet(string fn)
     {
         if (File.Exists(fn))
@@ -71,7 +80,11 @@ public class RasVOSet
 
     public void add(RasterVO n)
     {
-
+        if ((n.VO == null) &&(lBmp==null)) { throw new Exception { }; }
+        if (n.VO == null)
+        {
+            n.VO = BitmapUtils.FloatRegion(n.sRect, n.cc, n.downScale, lBmp);
+        }
         foreach (RasterVO evo in eVOS)
         {
             if (compareArray(n.VO, evo.VO))
@@ -99,4 +112,11 @@ public class RasVOSet
 
     }
 
+    internal void observe(Bitmap screenShot)
+    {
+        foreach (RasterVO rvo in eVOS)
+        {
+            rvo.observe(screenShot);
+        }
+    }
 }
