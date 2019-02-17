@@ -58,7 +58,7 @@ public class RasterVO
         initialized = true;
     }
 
-    internal float[,] get2dVO()
+    public float[,] get2dVO()
     {
         int width = (int)sRect.width;
         float[,] o = new float[width, (int)sRect.height];
@@ -71,6 +71,12 @@ public class RasterVO
 
         }
         return o;
+    }
+
+    private int getIdx(int x,int y)
+    {
+        //int x = (idx - (y * width));
+        return (x + (y * (int)sRect.width));
     }
 
     public RasterVO(UnityEngine.Rect nsRect, float[] nVO)
@@ -128,19 +134,51 @@ public class RasterVO
 
     }
 
-    public void PullValues(float v,float fallOff) {
+    public void PullValues(float v,float fallOff,float power) {
         for (int i = 0; i < VO.LongLength; i++)
         {
             float n = VO[i];
+
             float dp = Math.Abs(v - n)/fallOff;
             if (dp > 1) { dp = 1; }
             float t2 = Mathf.Pow(dp, 2/3f);
             float t1 = (Mathf.Sin(t2 * 3.14f));
 
             VO[i] = (n*(1-t1)) + (v*(t1));
-
+            VO[i] = (VO[i] * power) + (n * (1 - power));
 
         }
         
+    }
+    public void patch(int xoff,int yoff,float[,] patch)
+    {
+        for (int y = 0; y < patch.GetLength(1); y++)
+        {
+            for (int x = 0; x < patch.GetLength(0); x++)
+            {
+                VO[getIdx(x + xoff, y + yoff)] = patch[x, y];
+            }
+        }
+    }
+    public void PullValues(float v, float fallOff, float power,Rect area)
+    {
+        
+        for (int y = 0; y < area.height; y++)
+        {
+            for (int x = 0; x < area.width; x++)
+            {
+                long i = getIdx(x+(int)area.x,y+(int)area.y);
+                float n = VO[i];
+
+                float dp = Math.Abs(v - n) / fallOff;
+                if (dp > 1) { dp = 1; }
+                float t2 = Mathf.Pow(dp, 2 / 3f);
+                float t1 = (Mathf.Sin(t2 * 3.14f));
+                
+                VO[i] = (n * (1 - t1)) + (v * (t1));
+                VO[i] = (VO[i] * power) + (n * (1 - power));
+
+                }
+            }
     }
 }

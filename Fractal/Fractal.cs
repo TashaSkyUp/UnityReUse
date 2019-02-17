@@ -106,8 +106,9 @@ internal static float avgSquareVals(int i, int j, int stride, int size, float[] 
     float[] fa;
     if (seedValue == 0)
     {
-        seedValue = (int)(new System.Random().NextDouble() * 100000);
-    }
+            seedValue = (int)(System.DateTime.Now.Millisecond);
+            UnityEngine.Random.InitState(seedValue);
+        }
     if (!powerOf2(size) || (size == 1))
     {
 
