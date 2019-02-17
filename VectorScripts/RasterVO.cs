@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Drawing;
 using UnityEngine;
 
 public class RasterVO
@@ -8,7 +9,9 @@ public class RasterVO
     public string Tag="0";
     public UnityEngine.Rect sRect;
     public float[] VO;
- 
+    public int downScale;
+    public int cc;
+
     protected Texture2D myTex2d;
     private bool initialized=false;
     private float[,] a;
@@ -23,12 +26,12 @@ public class RasterVO
     {
 
     }
-    protected void UpdateTex2D(Color BC)
+    protected void UpdateTex2D(UnityEngine.Color BC)
     {
         if (myTex2d == null) { myTex2d = new Texture2D((int)sRect.width, (int)sRect.height); }
         var use = this;
         int idx = 0;
-        Color UC= new Color();
+        UnityEngine.Color UC = new UnityEngine.Color();
         if (BC == null) { 
             UnityEngine.Color c = new UnityEngine.Color
             {
@@ -100,6 +103,18 @@ public class RasterVO
         }
         myTex2d = new Texture2D((int)sRect.width, (int)sRect.height);
     }
+    public RasterVO(int ColorCode, int nDivisor, UnityEngine.Rect nsRect)
+    {
+
+        sRect = nsRect;
+        downScale = nDivisor;
+        cc = ColorCode;
+        myTex2d = new Texture2D((int)sRect.width, (int)sRect.height);
+    }
+
+    internal void observe(Bitmap screenShot){
+        VO = BitmapUtils.FloatRegion(sRect, cc, downScale,screenShot);
+    }
 
     public float PercentAtXOrGreater(float X)
     {
@@ -112,17 +127,15 @@ public class RasterVO
     }
     public Texture2D toTex2D()
     {
-        if (initialized == true) { return(myTex2d); } else { UpdateTex2D(new Color(1f, 1f, 1f)); }return (myTex2d);
+        if (initialized == true) { return(myTex2d); } else { UpdateTex2D(new UnityEngine.Color(1f, 1f, 1f)); }return (myTex2d);
 
     }
-    public Texture2D toTex2D(Color c)
+    public Texture2D toTex2D(UnityEngine.Color c)
     {
         if (initialized == true) { return (myTex2d); } else { UpdateTex2D(c); }
         return (myTex2d);
 
     }
-
-
     public Sprite toSprite()
     {
         var it = toTex2D();
@@ -133,6 +146,7 @@ public class RasterVO
         return (spr);
 
     }
+
 
     public void PullValues(float v,float fallOff,float power) {
         for (int i = 0; i < VO.LongLength; i++)
@@ -180,5 +194,69 @@ public class RasterVO
 
                 }
             }
+    }
+    public List<RasterVO> VerticleSlice()
+    {
+        List<RasterVO> ol = new List<RasterVO>();
+
+        List<float> o = new List<float>();
+
+        string state = "look";
+        int c = 0;// new float[(int)sRect.width];
+        int lineHeight = (int)Mathf.Ceil(sRect.height);
+        int lineWidth= (int)Mathf.Ceil(sRect.width);
+
+        int ii = 0;
+        for (int x = 0; x < lineWidth; x++)
+        {
+            float p = 0;
+            for (int y = 0; y < lineHeight; y++)
+            {
+
+                ii = (int)((y * (int)lineWidth) + x);
+                if (VO[ii] == 1) { p = 1; }
+
+            }
+
+            if ((p == 1) && (state == "look"))
+            {
+                state = "build";
+                o = new List<float>();
+
+            }
+            if ((p == 0) && (state == "build"))
+            {
+                state = "end";
+            }
+
+            if (state == "build")
+            {
+                for (int y = 0; y < lineHeight; y++)
+                {
+                    ii = (int)((y * (int)lineWidth) + x);
+                    float pp = VO[ii];
+                    o.Add(pp);
+                }
+                if (x == (int)sRect.width - 1)
+                {
+                    state = "end";
+                }
+
+            }
+            if (state == "end")
+            {
+
+                float h = lineHeight;
+                float w = o.Count / h;
+                ol.Add(new RasterVO(new UnityEngine.Rect(0, 0, w, h), o.ToArray()));
+                state = "look";
+                c++;
+
+            }
+        }
+
+
+
+        return ol;
     }
 }
