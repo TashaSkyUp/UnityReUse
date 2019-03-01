@@ -38,18 +38,19 @@ public class RasterVO
                 a = 1
             };
         }
+        //ii = (int)((y * (int)lineWidth) + x);
 
-       
         int mx = (int)use.sRect.width;
-        for (int x = 0; x < mx; x++)
+        for (int y = 0; y < use.sRect.height; y++)
         {
-            for (int y = 0; y < use.sRect.height; y++)
+            for (int x = 0; x < mx; x++)
             {
-                float n = use.VO[use.VO.LongLength - 1 - idx];
+                //float n = use.VO[use.VO.LongLength - 1 - idx];
+                float n = use.VO[idx];
                 UC.r = BC.r * n;
                 UC.g = BC.g * n;
                 UC.b = BC.b * n;
-                myTex2d.SetPixel((mx - 1) - x, y, UC);
+                myTex2d.SetPixel(x, y, UC);
                 idx++;
                 if (idx >= use.VO.Length - 1) { break; }
             }
@@ -113,7 +114,7 @@ public class RasterVO
     }
 
     internal void observe(Bitmap screenShot){
-        VO = BitmapUtils.FloatRegion(sRect, cc, downScale,screenShot);
+        VO = BitmapUtils.FloatRegion(ref sRect, cc, downScale,screenShot);
     }
 
     public float PercentAtXOrGreater(float X)
@@ -203,8 +204,8 @@ public class RasterVO
 
         string state = "look";
         int c = 0;// new float[(int)sRect.width];
-        int lineHeight = (int)Mathf.Ceil(sRect.height);
-        int lineWidth= (int)Mathf.Ceil(sRect.width);
+        int lineHeight = (int)(sRect.height);
+        int lineWidth  = (int)(sRect.width);
 
         int ii = 0;
         for (int x = 0; x < lineWidth; x++)
@@ -213,7 +214,7 @@ public class RasterVO
             for (int y = 0; y < lineHeight; y++)
             {
 
-                ii = (int)((y * (int)lineWidth) + x);
+                ii = (int)((y * lineWidth) + x);
                 if (VO[ii] == 1) { p = 1; }
 
             }
@@ -245,10 +246,21 @@ public class RasterVO
             }
             if (state == "end")
             {
-
+                List<float> oo = new List<float>();
                 float h = lineHeight;
-                float w = o.Count / h;
-                ol.Add(new RasterVO(new UnityEngine.Rect(0, 0, w, h), o.ToArray()));
+                float w = Mathf.Round(o.Count / h);
+
+                for (int yy = 0; yy < h; yy++)
+                {
+                    for (int xx = 0; xx < w; xx++)
+                    {
+                        int i = (int) ((xx * h) + yy);
+                        //Debug.Log(oo.Count + " = " + i);
+                        oo.Add(o[i]);
+                    }
+                }                    
+
+                ol.Add(new RasterVO(new UnityEngine.Rect(0, 0, w, h), oo.ToArray()));
                 state = "look";
                 c++;
 

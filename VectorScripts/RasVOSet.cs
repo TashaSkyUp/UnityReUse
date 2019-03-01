@@ -83,7 +83,7 @@ public class RasVOSet
         if ((n.VO == null) &&(lBmp==null)) { throw new Exception { }; }
         if (n.VO == null)
         {
-            n.VO = BitmapUtils.FloatRegion(n.sRect, n.cc, n.downScale, lBmp);
+            n.VO = BitmapUtils.FloatRegion(ref n.sRect, n.cc, n.downScale, lBmp);
         }
         foreach (RasterVO evo in eVOS)
         {

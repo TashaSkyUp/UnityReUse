@@ -5,22 +5,31 @@ using System.Drawing;
 
 public class BitmapUtils : MonoBehaviour
 {
-    public static float[] FloatRegion(Rect r, int color, int downScale, Bitmap nbmp)
+    public static float[] FloatRegion(ref Rect r, int color, int downScale, Bitmap nbmp)
     {
         //var graphics = System.Drawing.Graphics.FromImage(nbmp);
 
 
-        r.width = (int)Mathf.Ceil(r.width / downScale) * downScale;
-        r.height = (int)Mathf.Ceil(r.height / downScale) * downScale;
 
         int xs = (int)r.xMin; int ys = (int)r.yMin;
         int xe = (int)r.xMax; int ye = (int)r.yMax;
 
-        float[] o = new float[(int)(((xe - xs) / downScale) * ((ye - ys) / downScale))];
+        r.xMin = xs;
+        r.yMin = ys;
+        r.xMax = xe;
+        r.yMax = ye;
+
+        var xsize = (xe - xs);
+        var ysize = (ye - ys);
+
+        r.width = (int)xsize;
+        r.height = (int)ysize;
+
+        float[] o = new float[(int)((xsize / downScale) * ((ysize) / downScale))];
 
         long idx = 0;
 
-        for (int y = ys; y < ye; y = y + downScale){            
+        for (int y = ye; y > ys; y = y - downScale){            
                 for (int x = xs; x < xe; x = x + downScale){
 
                 if (color == 0)
