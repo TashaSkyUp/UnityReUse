@@ -26,29 +26,46 @@ public class IntFromXML
     }
     public class LabeledInt {
         public string label;
-        public int _int;        
+        public int _int; 
+        public LabeledInt(){}
+        public LabeledInt(string nlabel, int value)
+        {
+            label = nlabel;
+            _int=value;
+        }
     }
 
 
-    LabeledInt lint = new LabeledInt();
+    
     manyLI all = new manyLI();
-
-    public IntFromXML(string file, string uidLabel, int value)
+    string uidLabel;
+    public IntFromXML(string file, string nUIDLabel, int value)
     {
 
         xmlSRC = file;
-
+        uidLabel = nUIDLabel;
         if (File.Exists(file))
         {
-            LoadAll(file, uidLabel );
-            all.Get(uidLabel)._int = value;
-            SaveAll(file);
+            LoadAll(file );
+
+            var t = all.Get(uidLabel);
+
+            if (t == null)//uid is not defined
+            {
+                
+                all.values.Add(new LabeledInt(uidLabel,value));
+                SaveAll(file);
+            }
+            else//uid is defined
+            {
+
+            }
+
+            
         }
         else
         {
-            lint.label = uidLabel;
-            lint._int = value;
-            all.values.Add(lint);
+            all.values.Add(new LabeledInt(uidLabel, value));
             SaveAll(file);
         }
     }
@@ -61,22 +78,24 @@ public class IntFromXML
         stream.Close();       
     }
 
-    private void LoadAll(string file, string uidLabel)
+    private void LoadAll(string file)
     {
         xmlSRC = file;
         var xmlSerializer = new XmlSerializer(all.GetType());
         FileStream stream = File.Open(xmlSRC, FileMode.Open);
         all = (manyLI)xmlSerializer.Deserialize(stream);
+        
         stream.Close();
     }
 
-    public IntFromXML(string file, string uidLabel)
+    public IntFromXML(string file, string nuidLabel)
     {
-        LoadAll(file, uidLabel);
+        uidLabel = nuidLabel;
+        LoadAll(file);
 
-        lint = all.Get(uidLabel);
-        if (lint == null) {
-            lint = new LabeledInt();
+        var lint = all.Get(uidLabel);
+        if (lint == null) {            
+            lint = new LabeledInt(uidLabel,0);
             lint.label=uidLabel;
             all.values.Add(lint);
         }
@@ -84,13 +103,13 @@ public class IntFromXML
 
     }
 
-    public int Value { get => lint._int; set =>
+    public int Value { get => all.Get(uidLabel)._int;
+        set =>
             Save(value);
     }
     public void Save(int v)
-    {
-        
-        lint._int = v;
+    {        
+        all.Get(uidLabel)._int= v;
         SaveAll(xmlSRC);
     }
     
